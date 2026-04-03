@@ -26,9 +26,10 @@ main :: proc() {
     setup()
     enwall_playfield()
 
-    config_path := strings.concatenate({ os.get_env("HOME"), "/.config/ulti/tetris" })
-    os.set_current_directory(config_path)
-
+    config_path := strings.concatenate({ os.get_env_alloc("HOME", context.temp_allocator), "/.config/ulti/tetris" })
+    os.set_working_directory(config_path)
+    
+    rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_RESIZABLE }) // FULLSCREEN_MODE
     rl.InitWindow(i32(window_size.x), i32(window_size.y), "Tetris")
     load_images()

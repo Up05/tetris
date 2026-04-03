@@ -1,3 +1,4 @@
+#+feature using-stmt
 package main
 
 import "core:math"
@@ -96,7 +97,7 @@ handle_lockdown :: proc() {
 
 calc_size :: proc(data: [4][4] Palette) -> (size: [2] int) {
     for row, i in data {
-        ones  : [4] i8 = transmute([4] i8) { row.x != .NONE, row.y != .NONE, row.z != .NONE, row.w != .NONE }
+        ones  : [4] i8 = transmute([4] i8) [4] b8 { row.x != .NONE, row.y != .NONE, row.z != .NONE, row.w != .NONE }
         size.x = auto_cast max(ones.x, ones.y*2, ones.z*3, ones.w*4, i8(size.x))
         if size.x != 0 do size.y = i
     }

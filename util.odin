@@ -68,6 +68,8 @@ do_later :: proc(func: proc() -> (blocking: bool), skip: int) {
     append_elem(&delayed_funcs, Delayed { func, skip + tick_count })
 }
 
+eat :: proc(a: $T, B: any) -> T { return a }
+
 handle_delayed_funcs :: proc() -> (blocking: bool) {
     #reverse for f, i in delayed_funcs {
         if f.tick == tick_count {
