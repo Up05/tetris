@@ -5,6 +5,8 @@ import "core:slice"
 import "core:unicode/utf8"
 import "core:reflect"
 
+eat :: proc(a: $T, B: any) -> T { return a }
+
 @(private="file") piece_states : [dynamic] [] Palette
 append_piece_state :: proc(data: [] Palette) {
     cloned, _ := slice.clone(data)
@@ -35,7 +37,9 @@ log_accumulated_states :: proc() {
     clear(&piece_states)
 
 }
-// TODO: temp
+
+// =======================================================================================
+
 array_to_matrix :: proc(array: [4*4] Palette) -> (mat: matrix[4, 4] u8) {
     for i in 0..<4 {
         for j in 0..<4 {
@@ -56,6 +60,7 @@ transpose_4x4 :: proc(mat: ^[4][4] Palette) {
         for i in 0..<4 do mat^[i].xyzw = temp[i].xyzw
 }
 
+// =======================================================================================
 
 Delayed :: struct {
     func: proc() -> (blocking: bool),
@@ -68,7 +73,6 @@ do_later :: proc(func: proc() -> (blocking: bool), skip: int) {
     append_elem(&delayed_funcs, Delayed { func, skip + tick_count })
 }
 
-eat :: proc(a: $T, B: any) -> T { return a }
 
 handle_delayed_funcs :: proc() -> (blocking: bool) {
     #reverse for f, i in delayed_funcs {
@@ -79,3 +83,6 @@ handle_delayed_funcs :: proc() -> (blocking: bool) {
     }
     return
 }
+
+// =======================================================================================
+

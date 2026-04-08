@@ -39,6 +39,10 @@ handle_line_clear :: proc() -> bool {
             if blocks[y * width + x] == .NONE do should_line_clear = false
         }
         if should_line_clear {
+            for j in 0..<width {
+                block_break_effect(j, y, blocks[y * width + j])
+            }
+
             for i := y - 1; i >= 1; i -= 1 {
                 for j in 0..<width {
                     blocks[(i + 1) * width + j] = blocks[i * width + j]

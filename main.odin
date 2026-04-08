@@ -78,6 +78,7 @@ render :: proc(delta: f32) {
     render_playfield()
     render_piece(delta)
     render_next()
+    render_particles()
     frame_count += 1
 }
 

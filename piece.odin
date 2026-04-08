@@ -151,7 +151,15 @@ drop :: proc() {
         pos.y += 1
     }
     pos.y -= 1
+
+
+    for i in 0..<4 {
+        for j in 0..<4 {
+            block_break_effect(pos.x + j, pos.y + i, base.data[i][j])
+        }
+    }
     handle_lockdown()
+
 
 }
 

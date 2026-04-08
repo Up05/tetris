@@ -1,6 +1,7 @@
 #+feature using-stmt
 package main
 
+import "core:math"
 import "core:math/rand"
 import rl "vendor:raylib"
 
@@ -20,6 +21,21 @@ offsets : struct {
     next : vec, // upcomming piece
 }
 
+Particle :: struct {
+    start : vec,
+    pos   : vec,
+    size  : vec,
+    color : Palette,
+
+    lifetime : f32,
+
+    collision : bool,
+    vel : vec,
+    acc : vec,
+}
+
+particles : [1024 * 4] Particle
+
 calc_offsets :: proc() {
     half_playfield := vec { f32(playfield.width*SCALE), f32(playfield.height*SCALE) } / window_size / 2
 
@@ -35,7 +51,7 @@ draw_rectp :: proc(offset, pos, size: vec, color: Palette) {
     if images.use_images {
         tex := images.palette[color]
         tex_scale := f32(SCALE) / f32(tex.width)
-        rl.DrawTextureEx(tex, offset * window_size + pos * f32(SCALE), 0, tex_scale, 255)
+        rl.DrawTextureEx(tex, offset * window_size + pos * f32(SCALE), 0, tex_scale * size.x, 255)
     } else {
         rl.DrawRectangleV(offset * window_size + pos*f32(SCALE), size*f32(SCALE), colorscheme[color])
     }
@@ -61,7 +77,6 @@ render_playfield :: proc() {
             } else {
                 draw_rectp(offsets.main, { f32(j), f32(i) }, { 0.95, 0.95 }, c)
             } 
-    
         }
     }
 }
@@ -98,22 +113,23 @@ render_top_out :: proc() {
         n := 0
         for i in 0..<height {
             for j in 0..<width {
-                c := blocks[i * width + j]
+                c := blocks[i * width + j] if blocks[i * width + j] != .NONE else .DARK_GRAY
                 obj := &objs[n]
-                if c != .NONE {
-                    obj.pos = { f32(j) + 0.5, f32(i) + 0.5 } 
-                    obj.acc.x = -0.0001 + 0.000002 * f32(i)
-                    obj.acc.y = f32(i32(rand.float32() * 100) % 100) / -200000
-                    obj.col = c
-                    n += 1
-                }
+
+                obj.pos = { f32(j) + 0.5, f32(i) + 0.5 } 
+                obj.acc.x = (rand.float32() - 0.5) / 10_000
+                obj.acc.y = (rand.float32() - 0.1) / 10_000
+                obj.col = c
+                n += 1
             }
         }
         objs = objs[:n]
     }
+
+    particles = {}
     
     rl.EndDrawing()
-    for frame in 0..<int(rl.GetFPS())*4 {
+    for frame: int; frame < int(rl.GetFPS())*2; frame += 1 {
         if rl.WindowShouldClose() do break
         rl.BeginDrawing()
         defer rl.EndDrawing()
@@ -123,12 +139,56 @@ render_top_out :: proc() {
 
         for &obj, i in objs {
             draw_rectp(offsets.main, obj.pos - { 0.5, 0.5 }, vec{ 1, 1 }, obj.col)
-            obj.pos += obj.vel
-            obj.vel += obj.acc
-            obj.acc *= 0.99
-            obj.acc.y += 0.000003
+            obj.pos += obj.vel      * 100 * rl.GetFrameTime()
+            obj.vel += obj.acc      
+            obj.acc *= 0.99 
+            obj.acc.y += 0.000003   * 10 * rl.GetFrameTime()
         }
     }
     rl.BeginDrawing()
 }
 
+render_particles :: proc() {
+    for &particle, i in particles {
+        if particle.lifetime <= 0 { continue }
+        draw_rectp(offsets.main, particle.pos, particle.size, particle.color)
+        particle.lifetime -= 1
+
+        particle.acc.y += 0.001
+        particle.acc   *= 0.999
+        particle.vel   *= 0.99
+
+        particle.vel += particle.acc
+        if particle.collision {
+            curr_block := playfield.blocks[int(particle.pos.y) * playfield.width + int(particle.pos.x)]
+            if curr_block != .NONE && curr_block != .DARK_GRAY && curr_block != particle.color {
+                particle.vel = {}
+            }
+        }
+
+        particle.pos += particle.vel
+        if particle.collision {
+            particle.pos.x = min(max(particle.pos.x,  1), 11)
+            particle.pos.y = min(max(particle.pos.y,  1), 17)
+
+        }
+    }
+}
+
+add_particle :: proc(new_one: Particle) {
+    new_one := new_one
+    new_one.vel.x += (rand.float32() - 0.5) * 0.5
+    for &particle, i in particles { if particle.lifetime <= 0 { particle = new_one; break } }
+}
+
+move_particle :: proc(p: Particle, delta: vec) -> Particle { p := p; p.pos += delta; return p }
+
+block_break_effect :: proc(x, y: int, block: Palette) {
+    if block == .NONE { return }
+    base := Particle { pos = { f32(x), f32(y) }, size = 1.0 / 6, color = block, lifetime = 300, collision = true }
+
+    add_particle(move_particle(base, { 0.25, 0.25 }))
+    add_particle(move_particle(base, { 0.25, 0.75 }))
+    add_particle(move_particle(base, { 0.75, 0.25 }))
+    add_particle(move_particle(base, { 0.75, 0.75 }))
+}
