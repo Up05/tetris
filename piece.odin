@@ -4,7 +4,6 @@ package main
 import "core:math"
 import "core:math/rand"
 import "core:math/linalg"
-import rl "vendor:raylib"
 
 PieceType :: enum u8 {
     I, O, 
@@ -25,6 +24,21 @@ curr_piece  : struct {
 }
 
 next_piece_type : PieceType
+
+piece_bag: [dynamic; 7] PieceType
+
+get_random_piece :: proc() -> PieceType {
+    if use_bag {
+        if len(piece_bag) == 0 {
+            for type in PieceType { append(&piece_bag, type) }
+            rand.shuffle(piece_bag[:])
+        }
+
+        return pop(&piece_bag)
+    }
+    return rand.choice_enum(PieceType)
+}
+
 
 load_piece_scheme :: proc() {//{{{
     raw   := #load("pieces", string)
@@ -76,8 +90,6 @@ should_lockdown :: proc() -> bool {
 handle_lockdown :: proc() {
     using curr_piece
 
-    // log_accumulated_states()
-    
     for i in 0..<4 {
         for j in 0..<4 {
             if base.data[i][j] != .NONE {
@@ -85,8 +97,9 @@ handle_lockdown :: proc() {
             }
         }
     }
-    type = next_piece_type if tick_count > 1 else rand.choice_enum(PieceType)
-    next_piece_type = rand.choice_enum(PieceType)
+    type = next_piece_type if tick_count > 1 else get_random_piece()
+    next_piece_type = get_random_piece()
+
     base = base_pieces[type]
     pos  = { playfield.width / 2 - 2, 1 }
 
@@ -144,7 +157,7 @@ rotate :: proc(right: bool) {
 
 }
 
-drop :: proc() {
+drop :: proc(hard: bool) {
     using curr_piece
 
     for !should_lockdown() {
@@ -158,9 +171,8 @@ drop :: proc() {
             block_break_effect(pos.x + j, pos.y + i, base.data[i][j])
         }
     }
-    handle_lockdown()
 
-
+    if hard { handle_lockdown() }
 }
 
 update_piece :: proc() {
@@ -171,10 +183,6 @@ update_piece :: proc() {
     if should_lockdown() {
         pos.y -= 1
         handle_lockdown();
-    }
-
-    if frame_count % 6 == 0 {
-        // rotate(true)
     }
 
 }

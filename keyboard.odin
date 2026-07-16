@@ -8,7 +8,8 @@ Action :: enum {
     ROTATE_LEFT,
     ROTATE_RIGHT,
 
-    FAST_FORWARD,
+    DROP_HARD,
+    DROP_SONIC,
     TOGGLE_PAUSE,
     FULLSCREEN,
 }
@@ -32,7 +33,9 @@ handle_action :: proc(action: Action) {
         case .ROTATE_LEFT:  rotate(false)
         case .ROTATE_RIGHT: rotate(true)
         
-        case .FAST_FORWARD: drop()
+        case .DROP_HARD:    drop(hard = true)
+        case .DROP_SONIC:   drop(hard = false)
+
         case .TOGGLE_PAUSE: logln("NYI")
         case .FULLSCREEN:   logln("NYI")
     }

@@ -1,12 +1,11 @@
 #+feature using-stmt
 package main
 
-import rl "vendor:raylib"
-
 playfield : struct {
     width, height : int,
     blocks : [] Palette,
 }
+
 clear_playfield :: proc() {
     using playfield
     for i in 0..<height {

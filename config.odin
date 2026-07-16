@@ -1,11 +1,11 @@
 package main
 
 import "core:os"
+import "core:fmt"
 import "core:strings"
 import "core:strconv"
 import "core:reflect"
 import rl "vendor:raylib"
-// import "ini"
 import "core:encoding/ini"
 import "base:runtime"
 
@@ -19,8 +19,9 @@ Palette :: enum u8 {
 }
 
 colorscheme : [Palette] col
-
 tps : f32
+
+use_bag : bool
 
 @(private="file")
 config: ini.Map
@@ -39,7 +40,8 @@ setup :: proc() {
         }
     }
 
-    tps = strconv.parse_f32(config["game"]["tps"]) or_else 3
+    use_bag = strings.starts_with(config["game"]["use_bag"] or_else "", "true")
+    tps     = strconv.parse_f32(config["game"]["tps"]) or_else 3
 
     playfield.width  = strconv.parse_int(config["playfield"]["col"]) or_else 10
     playfield.height = strconv.parse_int(config["playfield"]["row"]) or_else 16
@@ -54,7 +56,7 @@ setup :: proc() {
         for key_name, i in keys {
             key_name := strings.trim_left_space(key_name)
             rlkey, ok := reflect.enum_from_name(rl.KeyboardKey, key_name)
-            assertf(ok, "[CONFIG ERROR] Found an unknown key: '%s' in config.ini! Try checking keylist.txt", key_name)
+            if !ok { fmt.printfln("[CONFIG ERROR] Found an unknown key: '%s' for: '%v' in config.ini! Try checking keylist.txt", key_name, a) }
             actions[a][i] = rlkey
         } 
 
