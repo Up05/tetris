@@ -130,7 +130,7 @@ render_top_out :: proc() {
     
     rl.EndDrawing()
     for frame: int; frame < int(rl.GetFPS())*2; frame += 1 {
-        if rl.WindowShouldClose() do break
+        if rl.WindowShouldClose() { should_quit = true; break }
         rl.BeginDrawing()
         defer rl.EndDrawing()
         rl.ClearBackground(colorscheme[.DARK_GRAY])
@@ -144,6 +144,7 @@ render_top_out :: proc() {
             obj.acc *= 0.99 
             obj.acc.y += 0.000003   * 10 * rl.GetFrameTime()
         }
+        should_quit = true
     }
     rl.BeginDrawing()
 }

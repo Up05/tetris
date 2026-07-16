@@ -1,2 +1,2 @@
 #!/bin/sh
-odin run . -debug
+odin build . -o:size -linker:mold && ./tetris

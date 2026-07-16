@@ -19,6 +19,7 @@ tick_count : int
 topped_out : bool
 
 config_path : string
+should_quit : bool
 
 main :: proc() {
  
@@ -42,7 +43,7 @@ main :: proc() {
     accumulator: f32
     prev_time := time.tick_now()
 
-    for !rl.WindowShouldClose() {
+    for !rl.WindowShouldClose() && !should_quit {
         frame_duration := f32(time.duration_seconds(time.tick_since(prev_time)))
         prev_time = time.tick_now()
         accumulator += frame_duration
